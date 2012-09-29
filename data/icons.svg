@@ -14,18 +14,9 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.48.3.1 r9886"
-   sodipodi:docname="New document 1">
+   sodipodi:docname="icons.svg">
   <defs
-     id="defs4">
-    <filter
-       inkscape:collect="always"
-       id="filter3795">
-      <feGaussianBlur
-         inkscape:collect="always"
-         stdDeviation="0.30000005"
-         id="feGaussianBlur3797" />
-    </filter>
-  </defs>
+     id="defs4" />
   <sodipodi:namedview
      id="base"
      pagecolor="#ffffff"
@@ -33,9 +24,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.70710678"
-     inkscape:cx="733.65331"
-     inkscape:cy="562.96298"
+     inkscape:zoom="16"
+     inkscape:cx="525.80076"
+     inkscape:cy="411.37811"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -52,7 +43,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -60,6 +51,18 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1">
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:none"
+       id="rect3777"
+       width="38"
+       height="22"
+       x="501"
+       y="629.36218"
+       rx="0"
+       ry="0"
+       inkscape:export-filename="/home/snova/Files/Code/bpm/trunk/icon1.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
     <g
        id="g3853"
        transform="matrix(0.53911247,0,0,0.5391125,192.76895,272.10206)"
@@ -269,5 +272,32 @@
          style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
          sodipodi:type="star" />
     </g>
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:2;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect3002"
+       width="38"
+       height="22"
+       x="501"
+       y="629.36218"
+       rx="2.1213007"
+       ry="2.1213007"
+       inkscape:export-filename="/home/snova/Files/Code/bpm/trunk/icon1.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+    <text
+       xml:space="preserve"
+       style="font-size:25.56488609px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="-629.55402"
+       y="-539.54407"
+       id="text3897"
+       sodipodi:linespacing="125%"
+       transform="scale(-0.8550755,-1.1694874)"
+       inkscape:export-filename="/home/snova/Files/Code/bpm/trunk/icon1.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90"><tspan
+         sodipodi:role="line"
+         id="tspan3899"
+         x="-629.55402"
+         y="-539.54407">&lt;&lt;</tspan></text>
   </g>
 </svg>
