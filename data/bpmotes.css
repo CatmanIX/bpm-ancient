@@ -30,6 +30,12 @@
     color: white !important;
     font-size: xx-small;
     padding: 5px;
+    
+    /*
+     * Allow emote name text to wrap, instead of overflowing.
+     */
+    word-wrap: break-word;
+    word-break: break-all;
 }
 
 .bpm-disabled, .bpm-disabled:before, .bpm-disabled:after, .bpm-disabled:hover, .bpm-disabled:active,
