@@ -8,12 +8,11 @@
 // @include https://*/*
 // @name BetterPonymotes
 // @namespace http://rainbow.mlas1.us/
-// @require emote-map.js?p=2&dver=57
-// @require sr-data.js?p=2&dver=57
-// @require pref-setup.js?p=2&cver=33
+// @require bpm-data.js?p=2&dver=60_3
+// @require pref-setup.js?p=2&cver=35
 // @run-at document-start
 // @updateURL http://rainbow.mlas1.us/betterponymotes.user.js
-// @version 33.57
+// @version 35.60.3
 // ==/UserScript==
 
 /*******************************************************************************
@@ -28,9 +27,10 @@
 
 "use strict";
 
-var BPM_CODE_VERSION = 33;
-var BPM_DATA_VERSION = 57;
-var BPM_RESOURCE_PREFIX = "http://rainbow.mlas1.us/";
+var BPM_CODE_VERSION = "35";
+var BPM_DATA_VERSION = "60_3";
+var BPM_RESOURCE_PREFIX = "http://rainbow.mlas1.us";
+var BPM_OPTIONS_PAGE = BPM_RESOURCE_PREFIX + "/options.html";
 
 var _bpm_this = this;
 
@@ -292,6 +292,9 @@ var bpm_utils = {
      * shortcomings to do so.
      *
      * "message" must be JSON-compatible.
+     *
+     * Note that the targetOrigin of the postMessage() call is "*", no matter
+     * what. Don't send anything even slightly interesting.
      */
     message_iframe: function(frame, message) {
         if(frame.contentWindow === null || frame.contentWindow === undefined) {
@@ -318,6 +321,74 @@ var bpm_utils = {
  */
 // Chrome is picky about bind().
 var bpm_log = bpm_utils.platform === "userscript" ? GM_log : console.log.bind(console);
+
+/*
+ * Emote lookup utilities. These are rather helpful, since our data format is
+ * optimized for space and memory, not easy of access.
+ */
+var bpm_data = {
+    /*
+     * Tries to locate an emote, either builtin or global.
+     */
+    lookup_emote: function(name, custom_emotes) {
+        return (this.lookup_core_emote(name) ||
+                this.lookup_custom_emote(name, custom_emotes) ||
+                null);
+    },
+
+    /*
+     * Looks up a builtin emote's information. Returns an object with a couple
+     * of properties, or null if the emote doesn't exist.
+     */
+    lookup_core_emote: function(name) {
+        // NRRSSSS+tags where N=nsfw, RR=subreddit, SSSS=size
+        var info = emote_map[name];
+        if(info === undefined) {
+            return null;
+        }
+
+        var is_nsfw = parseInt(info.slice(0, 1), 10);
+        var source_id = parseInt(info.slice(1, 3), 10);
+        var size = parseInt(info.slice(3, 7), 16); // Hexadecimal
+        var tags = [];
+        var start = 7;
+        // One byte per tag, hexadecimal
+        var str;
+        while((str = info.slice(start, start+2)) !== "") {
+            tags.push(parseInt(str, 16));
+            start += 2;
+        }
+        return {
+            name: name,
+            is_nsfw: Boolean(is_nsfw),
+            source_id: source_id,
+            source_name: sr_id2name[source_id],
+            max_size: size,
+            tags: tags,
+            css_class: "bpmote-" + bpm_utils.sanitize(name.slice(1))
+        };
+    },
+
+    /*
+     * Looks up a custom emote's information. The returned object is rather
+     * sparse, but roughly compatible with core emote's properties.
+     */
+    lookup_custom_emote: function(name, custom_emotes) {
+        if(custom_emotes[name] === undefined) {
+            return null;
+        }
+
+        return {
+            name: name,
+            is_nsfw: false,
+            source_id: null,
+            source_name: "custom subreddit",
+            max_size: null,
+            tags: [],
+            css_class: "bpm-cmote-" + bpm_utils.sanitize(name.slice(1)),
+        };
+    }
+};
 
 /*
  * Browser compatibility object. (Mostly implemented per-browser.)
@@ -368,8 +439,8 @@ var bpm_browser = {
     //    function _send_message(method, data)
     //    function link_css(filename)
     // Assumed globals:
-    //    var sr_id_map
-    //    var sr_data
+    //    var sr_id2name
+    //    var sr_name2id
     //    var emote_map
 };
 
@@ -551,7 +622,7 @@ case "userscript":
             }
 
             this.prefs = JSON.parse(tmp);
-            bpm_backendsupport.setup_prefs(this.prefs, sr_data);
+            bpm_backendsupport.setup_prefs(this.prefs, sr_name2id);
             this._sync_prefs();
 
             bpm_prefs.got_prefs(this.prefs);
@@ -636,14 +707,14 @@ var bpm_prefs = {
 
     _make_sr_array: function() {
         this.sr_array = [];
-        for(var id in sr_id_map) {
-            this.sr_array[id] = this.prefs.enabledSubreddits[sr_id_map[id]];
+        for(var id in sr_id2name) {
+            this.sr_array[id] = this.prefs.enabledSubreddits2[sr_id2name[id]];
         }
         if(this.sr_array.indexOf(undefined) > -1) {
-            // Holes in the array mean holes in sr_id_map, which can't possibly
+            // Holes in the array mean holes in sr_id2name, which can't possibly
             // happen. If it does, though, any associated emotes will be hidden.
             //
-            // Also bad would be items in prefs not in sr_id_map, but that's
+            // Also bad would be items in prefs not in sr_id2name, but that's
             // more or less impossible to handle.
             bpm_log("BPM: ERROR: sr_array has holes; installation or prefs are broken!");
         }
@@ -704,41 +775,24 @@ var bpm_converter = {
                 // Don't normalize case for emote lookup
                 var parts = href.split("-");
                 var emote_name = parts[0];
+                var emote_info = bpm_data.lookup_emote(emote_name, prefs.custom_emotes);
 
-                var is_emote = false;
-                var is_nsfw, sr_enabled, emote_size, emote_sourcename, class_name;
-                if(emote_map[emote_name]) {
-                    is_emote = true;
-                    var emote_info = emote_map[emote_name];
-                    is_nsfw = emote_info[0];
-                    var source_id = emote_info[1];
-                    sr_enabled = prefs.sr_array[source_id];
-                    emote_size = emote_info[2];
-                    emote_sourcename = sr_data[sr_id_map[source_id]][0];
-                    // Strip off leading "/".
-                    class_name = "bpmote-" + bpm_utils.sanitize(emote_name.slice(1));
-                } else if(prefs.custom_emotes[emote_name]) {
-                    is_emote = true;
-                    is_nsfw = false;
-                    sr_enabled = true;
-                    emote_size = 0;
-                    emote_sourcename = "custom subreddit";
-                    class_name = "bpm-cmote-" + bpm_utils.sanitize(emote_name.slice(1));
-                }
+                if(emote_info !== null) {
+                    var sr_enabled = (emote_info.source_id !== null ? prefs.sr_array[emote_info.source_id] : true);
+                    var emote_size = emote_info.max_size || 0;
 
-                if(is_emote) {
                     // Click blocker CSS/JS
                     element.className += " bpm-emote";
                     // Used in alt-text. (Note: dashes are invalid here)
                     element.dataset["bpm_emotename"] = emote_name;
-                    element.dataset["bpm_srname"] = emote_sourcename;
+                    element.dataset["bpm_srname"] = emote_info.source_name;
 
                     if(!prefs.we_map[emote_name]) {
                         var nsfw_class = prefs.prefs.hideDisabledEmotes ? " bpm-hidden" : " bpm-nsfw";
                         var disabled_class = prefs.prefs.hideDisabledEmotes ? " bpm-hidden" : " bpm-disabled";
                         // Ordering matters a bit here- placeholders for NSFW emotes
                         // come before disabled emotes.
-                        if(is_nsfw && !prefs.prefs.enableNSFW) {
+                        if(emote_info.is_nsfw && !prefs.prefs.enableNSFW) {
                             element.className += nsfw_class;
                             if(!element.textContent) {
                                 // Any existing text (there really shouldn't be any)
@@ -766,7 +820,7 @@ var bpm_converter = {
                         }
                     }
 
-                    element.className += " " + class_name;
+                    element.className += " " + emote_info.css_class;
 
                     // Apply flags in turn. We pick on the naming a bit to prevent
                     // spaces and such from slipping in.
@@ -942,7 +996,13 @@ var bpm_search = {
      */
     init_frame: function(prefs) {
         window.addEventListener("message", bpm_utils.catch_errors(function(event) {
-            // event.source === null in Firefox (as it's from extension code)
+            // Not worried about event source (it might be null in Firefox, as
+            // a note). Both of these methods are quite harmless, so it's
+            // probably ok to let them be publically abusable.
+            //
+            // I'm not sure how else we can do it, anyway- possibly by going
+            // through the backend, but not in userscripts. (Maybe we can abuse
+            // GM_setValue().)
             var message = event.data;
             switch(message.__betterponymotes_method) {
                 case "__bpm_inject_emote":
@@ -987,6 +1047,7 @@ var bpm_search = {
             '        <p>Searching for <code>"aj happy"</code> will show you all emotes with both <code>"aj"</code> and <code>"happy"</code> in their names.',
             '        <p>The special syntax <code>"sr:subreddit"</code> will limit your results to emotes from that subreddit.',
             '        <p>Using more than one subreddit will show you emotes from all of them.',
+            '        <p>Searching for <code>"+tag"</code> will show you emotes with the given tag.',
             '      </div>',
             '    </span>',
             '    <span id="bpm-resize"></span>',
@@ -1034,19 +1095,17 @@ var bpm_search = {
         }.bind(this)), false);
 
         // Listen for keypresses and adjust search results. Delay 500ms after
-        // start of typing to make it more responsive (otherwise it typically
-        // starts searching after the first keystroke, which generates a lot
-        // of output for no reason).
-        var waiting = false;
+        // end of typing to make it more responsive.
+        var timeout = null;
         this.search.addEventListener("input", bpm_utils.catch_errors(function(event) {
-            if(!waiting) {
-                window.setTimeout(bpm_utils.catch_errors(function() {
-                    // Re-enable searching as early as we can, just in case
-                    waiting = false;
-                    this.update_search(prefs);
-                }.bind(this)), 500);
-                waiting = true;
+            if(timeout !== null) {
+                clearTimeout(timeout);
             }
+            timeout = setTimeout(bpm_utils.catch_errors(function() {
+                // Re-enable searching as early as we can, just in case
+                timeout = null;
+                this.update_search(prefs);
+            }.bind(this)), 500);
         }.bind(this)), false);
 
         // Listen for clicks
@@ -1188,27 +1247,45 @@ var bpm_search = {
     update_search: function(prefs) {
         // Split search query on spaces, remove empty strings, and lowercase terms
         var terms = this.search.value.split(" ").map(function(v) { return v.toLowerCase(); });
+        terms = terms.filter(function(v) { return v; });
         prefs.prefs.lastSearchQuery = terms.join(" ");
         bpm_prefs.sync_key("lastSearchQuery");
 
         var sr_terms = [];
+        var tag_term_sets = [];
         var match_terms = [];
         for(var t = 0; t < terms.length; t++) {
+            var term = terms[t];
             // If it starts with "sr:" it's subreddit syntax, otherwise it's a
             // normal search term.
-            if(terms[t].indexOf("sr:") === 0) {
-                sr_terms.push(terms[t].slice(3));
+            if(term.indexOf("sr:") === 0) {
+                sr_terms.push([term.slice(3)]);
+            } else if(term[0] == "+") {
+                var id = tag_name2id[term];
+                if(id !== undefined) {
+                    tag_term_sets.push([id]); // Exact match
+                } else {
+                    var match_aliases = [];
+                    // Locate anything that works
+                    for(var alias in tag_name2id) {
+                        id = tag_name2id[alias];
+                        // Cut off +
+                        if(alias.slice(1).indexOf(term.slice(1)) > -1 &&
+                           match_aliases.indexOf(id) < 0) {
+                            match_aliases.push(id);
+                        }
+                    }
+                    if(match_aliases.length) {
+                        tag_term_sets.push(match_aliases);
+                    }
+                }
             } else {
-                match_terms.push(terms[t]);
+                match_terms.push(term);
             }
         }
 
-        // Filter out empty strings
-        sr_terms = sr_terms.filter(function(v) { return v; });
-        match_terms = match_terms.filter(function(v) { return v; });
-
         // If there's nothing to search on, reset and stop
-        if(!sr_terms.length && !match_terms.length) {
+        if(!sr_terms.length && !tag_term_sets.length && !match_terms.length) {
             this.results.innerHTML = "";
             this.count.textContent = "";
             return;
@@ -1216,9 +1293,16 @@ var bpm_search = {
 
         var results = [];
         no_match:
-        for(var emote in emote_map) {
+        for(var emote_name in emote_map) {
+            var emote_info = bpm_data.lookup_emote(emote_name);
+
+            // Ignore hidden emotes
+            if(emote_info.tags.indexOf(tag_name2id["+hidden"]) > -1) {
+                continue no_match;
+            }
+
             // Cache lowercased version
-            var lc_emote = emote.toLowerCase();
+            var lc_emote = emote_name.toLowerCase();
             // Match if ALL search terms match
             for(var t = 0; t < match_terms.length; t++) {
                 if(lc_emote.indexOf(match_terms[t]) < 0) {
@@ -1226,14 +1310,10 @@ var bpm_search = {
                 }
             }
 
-            // emote_map[emote][1] == subreddit id
-            // sr_id_map[id] == internal sr name
-            // sr_data[name][1] == "human readable name"
-            // Generally this name is already lowercase, though not for bpmextras
-            var source_sr_name = sr_data[sr_id_map[emote_map[emote][1]]][0].toLowerCase();
-
-            // Match if ANY subreddit terms match
+            // Match if AT LEAST ONE subreddit terms match
             if(sr_terms.length) {
+                // Generally this name is already lowercase, though not for bpmextras
+                var source_sr_name = emote_info.source_name.toLowerCase();
                 var is_match = false;
                 for(var t = 0; t < sr_terms.length; t++) {
                     if(source_sr_name.indexOf(sr_terms[t]) > -1) {
@@ -1246,7 +1326,23 @@ var bpm_search = {
                 }
             }
 
-            results.push(emote);
+            // Match if ALL tag sets match
+            for(var tt_i = 0; tt_i < tag_term_sets.length; tt_i++) {
+                // Match if AT LEAST ONE of these match
+                var tag_set = tag_term_sets[tt_i];
+                var any = false;
+                for(var ts_i = 0; ts_i < tag_set.length; ts_i++) {
+                    if(emote_info.tags.indexOf(tag_set[ts_i]) > -1) {
+                        any = true;
+                        break;
+                    }
+                }
+                if(!any) {
+                    continue no_match;
+                }
+            }
+
+            results.push(emote_info);
         }
         results.sort();
 
@@ -1258,17 +1354,13 @@ var bpm_search = {
         var html = "";
         var shown = 0, hidden = 0;
         for(var i = 0; i < results.length; i++) {
-            var emote_name = results[i];
-            var emote_info = emote_map[emote_name];
-            var is_nsfw = emote_info[0];
-            var source_id = emote_info[1];
-            var emote_size = emote_info[2];
+            var emote_info = results[i];
 
             // if((blacklisted) && !whitelisted)
-            if((!prefs.sr_array[source_id] || (is_nsfw && !prefs.prefs.enableNSFW) ||
-                prefs.de_map[emote_name] ||
-                (prefs.prefs.maxEmoteSize && emote_size > prefs.prefs.maxEmoteSize)) &&
-               !prefs.we_map[emote_name]) {
+            if((!prefs.sr_array[emote_info.source_id] || (emote_info.is_nsfw && !prefs.prefs.enableNSFW) ||
+                prefs.de_map[emote_info.name] ||
+                (prefs.prefs.maxEmoteSize &&  emote_info.max_size > prefs.prefs.maxEmoteSize)) &&
+               !prefs.we_map[emote_info.name]) {
                 // TODO: enable it anyway if a pref is set? Dunno what exactly
                 // we'd do
                 hidden += 1;
@@ -1281,14 +1373,10 @@ var bpm_search = {
                 shown += 1;
             }
 
-            // Strip off leading "/".
-            var class_name = "bpmote-" + bpm_utils.sanitize(emote_name.slice(1));
-            var source_name = sr_data[sr_id_map[source_id]][0];
-
             // Use <span> so there's no chance of emote parse code finding
             // this.
-            html += "<span data-emote=\"" + emote_name + "\" class=\"bpm-result " +
-                    class_name + "\" title=\"" + emote_name + " from " + source_name + "\"></span>";
+            html += "<span data-emote=\"" + emote_info.name + "\" class=\"bpm-result " +
+                    emote_info.css_class + "\" title=\"" + emote_info.name + " from " + emote_info.source_name + "\"></span>";
         }
 
         this.results.innerHTML = html;
@@ -1501,35 +1589,18 @@ var bpm_global = {
                     // Don't normalize case for emote lookup
                     var parts = match[1].split("-");
                     var emote_name = parts[0];
+                    var emote_info = bpm_data.lookup_emote(emote_name, prefs.custom_emotes);
 
-                    // TODO: unduplicate this morass
-                    var is_emote = false;
-                    var is_nsfw, sr_enabled, emote_size, emote_sourcename, class_name;
-                    if(emote_map[emote_name]) {
-                        is_emote = true;
-                        var emote_info = emote_map[emote_name];
-                        is_nsfw = emote_info[0];
-                        var source_id = emote_info[1];
-                        sr_enabled = prefs.sr_array[source_id];
-                        emote_size = emote_info[2];
-                        emote_sourcename = sr_data[sr_id_map[source_id]][0];
-                        // Strip off leading "/".
-                        class_name = "bpmote-" + bpm_utils.sanitize(emote_name.slice(1));
-                    } else if(prefs.custom_emotes[emote_name]) {
-                        is_emote = true;
-                        is_nsfw = false;
-                        sr_enabled = true;
-                        emote_size = 0;
-                        emote_sourcename = "custom subreddit";
-                        class_name = "bpm-cmote-" + bpm_utils.sanitize(emote_name.slice(1));
-                    } else {
+                    if(emote_info === null) {
                         continue;
                     }
+                    var sr_enabled = (emote_info.source_id !== null ? prefs.sr_array[emote_info.source_id] : true);
+                    var emote_size = emote_info.max_size || 0;
 
                     // Check that it hasn't been disabled somehow
                     if(!prefs.we_map[emote_name] &&
                         (!sr_enabled || prefs.de_map[emote_name] ||
-                         (is_nsfw && !prefs.prefs.enableNSFW) ||
+                         (emote_info.is_nsfw && !prefs.prefs.enableNSFW) ||
                          (prefs.prefs.maxEmoteSize && emote_size > prefs.prefs.maxEmoteSize))) {
                         continue;
                     }
@@ -1543,7 +1614,7 @@ var bpm_global = {
 
                     // Build emote. (Global emotes are always -in)
                     var element = document.createElement("span");
-                    element.className = "bpflag-in " + class_name;
+                    element.className = "bpflag-in " + emote_info.css_class;
 
                     // Don't need to do validation on flags, since our matching
                     // regexp is strict enough to begin with (although it will
@@ -1799,11 +1870,91 @@ var bpm_core = {
     },
 
     /*
+     * Manages communication with our options page on platforms that work this
+     * way (userscripts).
+     */
+    setup_options_link: function() {
+        function _check(prefs) {
+            var tag = document.getElementById("ready");
+            var ready = tag.textContent.trim();
+
+            if(ready === "true") {
+                window.postMessage({
+                    "__betterponymotes_target": "__bpm_options_page",
+                    "__betterponymotes_method": "__bpm_prefs",
+                    "__betterponymotes_prefs": bpm_prefs.prefs
+                }, BPM_RESOURCE_PREFIX);
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        // Impose a limit, in case something is broken.
+        var checks = 0;
+        function recheck(prefs) {
+            if(checks < 10) {
+                checks++;
+                if(!_check(prefs)) {
+                    window.setTimeout(bpm_utils.catch_errors(function() {
+                        recheck();
+                    }), 200);
+                }
+            } else {
+                bpm_log("BPM: ERROR: options page is unavailable after 2 seconds. Assuming broken.");
+                // TODO: put some kind of obvious error <div> on the page or
+                // something
+            }
+        }
+
+        // Listen for messages that interest us
+        window.addEventListener("message", bpm_utils.catch_errors(function(event) {
+            var message = event.data;
+            // Verify source and intended target (we receive our own messages,
+            // and don't want to get anything from rogue frames).
+            if(event.origin !== BPM_RESOURCE_PREFIX || event.source !== window ||
+               message.__betterponymotes_target !== "__bpm_extension") {
+                return;
+            }
+
+            switch(message.__betterponymotes_method) {
+                case "__bpm_set_pref":
+                    var key = message.__betterponymotes_pref;
+                    var value = message.__betterponymotes_value;
+
+                    if(bpm_prefs.prefs[key] !== undefined) {
+                        bpm_prefs.prefs[key] = value;
+                        bpm_prefs.sync_key(key);
+                    } else {
+                        bpm_log("BPM: ERROR: Invalid pref write from options page: '" + key + "'");
+                    }
+                    break;
+
+                default:
+                    bpm_log("BPM: ERROR: Unknown request from options page: '" + message.__betterponymotes_method + "'");
+                    break;
+            }
+        }.bind(this)), false);
+
+        bpm_utils.with_dom(function() {
+            bpm_prefs.when_available(function(prefs) {
+                // Wait for options.js to be ready (checking every 200ms), then
+                // send it down.
+                recheck();
+            });
+        });
+    },
+
+    /*
      * main()
      */
     main: function() {
         bpm_browser.request_prefs();
         bpm_browser.request_custom_css();
+
+        if(document.location.href === BPM_OPTIONS_PAGE) {
+            this.setup_options_link();
+        }
 
         if(bpm_utils.ends_with(document.location.hostname, "reddit.com")) {
             // Most environments permit us to create <link> tags before

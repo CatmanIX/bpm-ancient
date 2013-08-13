@@ -2,7 +2,7 @@
 
 div.side {
     padding: 435px 0px 0px 0px;
-    background-color: #fff;
+    background-color: transparent;
     background-image: url(%%side%%) !important;
     background-position: 10px 5px !important;
     background-repeat: no-repeat !important
@@ -11,7 +11,7 @@ div.side:before {
     margin: 10px;
     font-weight: 500;
     font-size: 1.0em;
-    content: "Congratulations to our contest winners!"
+/*    content: "Congratulations to our contest winners!" */
     }
 
 /* Nightmode fixes for the background */
@@ -331,25 +331,25 @@ a.author[href$="/RetardVomitPussyCunt"]:after {
     letter-spacing: normal
     }
 
-/* H: CUSTOM ARROWS */
+/* H: CUSTOM ARROWS */ 
 
 .arrow.up {
-    background-image: url(%%upoff%%);
-    background-position: 0 0;
+    background-image: url(%%upoff%%) !important;
+    background-position: 0 0 !important;
     z-index: 999;
     }
 .arrow.down {
-    background-image: url(%%downoff%%);
-    background-position: 0 0;
+    background-image: url(%%downoff%%) !important;
+    background-position: 0 0 !important;
     }
 .arrow.upmod {
-    background-image: url(%%up%%);
-    background-position: 0 0;
+    background-image: url(%%up%%) !important;
+    background-position: 0 0 !important;
     z-index: 999;
     }
 .arrow.downmod {
-    background-image: url(%%down%%);
-    background-position: 0 0
+    background-image: url(%%down%%) !important;
+    background-position: 0 0 !important
     }
 
 /* I: FOOTER*/
@@ -614,3 +614,34 @@ div.titlebox .users-online span.number:after
     }
 /* Hiding my name in the modbox. */
 .sidecontentbox .id-t2_8lje7, .sidecontentbox .id-t2_8lje7 ~ *{display: none}
+
+
+/* Replacing somebody's name? Add it to the list here. */
+
+a.author[href$="derram_2"],
+a.author[href$=Chinch335],
+a.author[href$="mrjoker7854"]
+
+{ 
+font-size:0!important; 
+overflow:hidden; 
+display:inline-block; 
+content: "";
+}
+
+/* Replacing somebody's name? Add it to the list here too. */
+
+a.author[href$="derram_2"]:before,
+a.author[href$=Chinch335]:before ,
+a.author[href$="mrjoker7854"]:before
+
+{
+font-size:10px!important; 
+visibility:visible!important;
+}
+
+/* Replacing somebody's name? Put the replacement here. */
+
+a.author[href$="derram_2"]:before {content:"derramina Diane Pie"}
+a.author[href$=Chinch335]:before {content:"Chinchy"}
+a.author[href$="mrjoker7854"]:before {content:"Pinkie Scratchspectacularathon"}
