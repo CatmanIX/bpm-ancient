@@ -1,0 +1,146 @@
+RootTags:
+- +canon
+- +oc
+- +nonpony
+- +pinkiepipes
+- +oldgen
+- +formatting
+# Special tags
+- +broken
+- +remove
+# Not exactly a "root tag", but the simplest way to silence complaints
+- +v
+
+ExclusiveTags:
+  +remove: []
+  +v: [+drop]
+
+HiddenTags:
+- +drop
+
+TagAliases:
+  +applejack: [+aj]
+  +fluttershy: [+fs]
+  +pinkiepie: [ +pp]
+  +rainbowdash: [+rbd, +rd]
+  +twilightsparkle: [+ts]
+
+  +applebloom: [+ab]
+  +sweetiebelle: [+sb]
+
+  +caketwins: [+poundcake, +pumpkincake]
+  +grannysmith: [+granny]
+  +nightmaremoon: [+nmm]
+  +princesscelestia: [+tia]
+  +shiningarmor: [+shiningarmour]
+  +vinylscratch: [+djpony, +djpon3]
+
+  +carrottop: [+goldenharvest]
+  +lyra: [+heartstrings]
+  +soarin: [+soaren]
+
+  +opalescence: [+cat]
+  +doctorwhooves: [+timeturner, +dw]
+
+  +pinkamina: [+pinkamena, +diane]
+
+TagImplications:
+  # Special tags
+  +broken: [+remove]
+  +formatting: [+hidden]
+  +v: [+hidden]
+
+  # Mane 6
+  +applejack: [+canon, +mane, +pony]
+  +fluttershy: [+canon, +mane, +pony]
+  +pinkiepie: [+canon, +mane, +pony]
+  +rarity: [+canon, +mane, +pony]
+  +rainbowdash: [+canon, +mane, +pony]
+  +twilightsparkle: [+canon, +mane, +pony]
+
+  # CMC
+  +applebloom: [+canon, +cmc, +major, +pony]
+  +scootaloo: [+canon, +cmc, +major, +pony]
+  +sweetiebelle: [+canon, +cmc, +major, +pony]
+
+  # Significant canon characters
+  +bigmac: [+canon, +major, +pony]
+  +braeburn: [+canon, +major, +pony]
+  +cadance: [+canon, +major, +pony]
+  +caketwins: [+canon, +major, +pony]
+  +cheerilee: [+canon, +major, +pony]
+  +chrysalis: [+canon, +major, +pony, +villian]
+  +derpy: [+canon, +major, +pony]
+  +diamondtiara: [+canon, +major, +pony]
+  +fancypants: [+canon, +major, +pony]
+  +fleurdelis: [+canon, +major, +pony]
+  +flimandflam: [+canon, +major, +pony]
+  +grannysmith: [+canon, +major, +pony]
+  +hoitytoity: [+canon, +major, +pony]
+  +maredowell: [+canon, +major, +pony]
+  +mayor: [+canon, +major, +pony]
+  +nightmaremoon: [+canon, +major, +pony, +villian]
+  +photofinish: [+canon, +major, +pony]
+  +pip: [+canon, +major, +pony]
+  +princesscelestia: [+canon, +major, +pony, +princess]
+  +princessluna: [+canon, +major, +pony, +nightmaremoon, +princess]
+  +shiningarmor: [+canon, +major, +pony]
+  +silverspoon: [+canon, +major, +pony]
+  +snipsandsnails: [+canon, +major, +pony]
+  +spitfire: [+canon, +major, +pony, +wonderbolt]
+  +trixie: [+canon, +major, +pony]
+  +twist: [+canon, +major, +pony]
+  +vinylscratch: [+canon, +major, +pony]
+  +zecora: [+canon, +major, +pony]
+
+  # Background ponies
+  +berrypunch: [+canon, +bgpony, +pony]
+  +bonbon: [+canon, +bgpony, +pony]
+  +carrottop: [+canon, +bgpony, +pony]
+  +colgate: [+canon, +bgpony, +pony]
+  +daisy: [+canon, +bgpony, +pony]
+  +dinky: [+canon, +bgpony, +pony]
+  +doctorwhooves: [+canon, +bgpony, +pony, +doctorwho]
+  +flitter: [+canon, +bgpony, +pony]
+  +lily: [+canon, +bgpony, +pony]
+  +lyra: [+canon, +bgpony, +pony]
+  +octavia: [+canon, +bgpony, +pony]
+  +otherpony: [+canon, +bgpony, +pony]
+  +roseluck: [+canon, +bgpony, +pony]
+  +rubypinch: [+canon, +bgpony, +pony]
+  +soarin: [+canon, +bgpony, +pony, +wonderbolt]
+
+  # Non-pony canon characters
+  +discord: [+canon, +major, +villian]
+  +spike: [+canon, +major]
+  +angel: [+canon, +major]
+  +cockatrice: [+canon, +major]
+  +crankydoodle: [+canon, +major]
+  +gilda: [+canon, +major]
+  +gummy: [+canon, +major]
+  +ironwill: [+canon, +major]
+  +opalescence: [+canon, +major]
+  +owlowiscious: [+canon, +major]
+  +stevenmagnet: [+canon, +major]
+  +tank: [+canon, +major]
+  +misc: [+canon]
+
+  # OC's
+  +apathia: [+oc, +ocpony]
+  +daylightdarkle: [+oc, +ocpony]
+  +discentia: [+oc, +ocpony]
+  +futashy: [+fluttershy, +oc, +ocpony]
+  +jappleack: [+applejack, +oc, +ocpony]
+  +karma: [+oc, +ocpony]
+  +surprise: [+oc, +ocpony]
+
+  # Nonpony
+  +damon: [+nonpony]
+  +spiderman: [+nonpony]
+  +squidward: [+nonpony]
+
+  # Misc implications
+  +nsfw: [+questionable]
+  +ocpony: [+oc]
+  +smooze: [+oldgen]
+  +foodmane: [+mashup]

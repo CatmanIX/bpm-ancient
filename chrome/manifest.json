@@ -6,8 +6,7 @@
         {
             "all_frames": true, 
             "js": [
-                "emote-map.js", 
-                "sr-data.js", 
+                "bpm-data.js", 
                 "betterponymotes.js"
             ], 
             "matches": [
@@ -26,7 +25,7 @@
         "https://*.reddit.com/", 
         "http://*.redditstatic.com/"
     ], 
-    "version": "33.57", 
+    "version": "35.60.3", 
     "web_accessible_resources": [
         "bpmotes.css", 
         "emote-classes.css", 

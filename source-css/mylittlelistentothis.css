@@ -700,7 +700,7 @@ a:link, a:visited, .menuarea .dropdown.lightdrop .selected, .flat-list .selected
 {
 	background-color:#EEE !important;
         background-image:linear-gradient(#FFF,#EEE) !important;
-       background-image:-webkit-linear-gradient(#FFF,#EEE) !important;
+        background-image:-webkit-linear-gradient(#FFF,#EEE) !important;
         background-image:-moz-linear-gradient(#FFF,#EEE) !important;
         background-image:-o-linear-gradient(#FFF,#EEE) !important;
 	border:1px solid #CCC !important;
@@ -709,6 +709,10 @@ a:link, a:visited, .menuarea .dropdown.lightdrop .selected, .flat-list .selected
 	padding:10px;
 }
 
+.res-nightmode .linkinfo, .res-nightmode #searchexpando.infobar {
+background-image:none !important;
+box-shadow:0 1px 2px #222 !important
+}
 .titlebox form.leavecontributor-button
 {
 	background-position:0 -827px !important;
@@ -920,6 +924,12 @@ shinebar {
 
 /* START NIGHTMODE FIXES */
 
+.res-nightmode .titlebox .usertext-body .md ol a {
+    border: medium none !important;
+    color: #eeeeee !important;
+}
+
+
 .res.res-nightmode .keyHighlight, .res.res-nightmode .keyHighlight .usertext-body, .res.res-nightmode .keyHighlight .usertext-body .md, .res.res-nightmode .keyHighlight .usertext-body .md p, .res.res-nightmode .keyHighlight .noncollapsed, .res.res-nightmode .keyHighlight .noncollapsed .md, .res.res-nightmode .keyHighlight .noncollapsed .md p {
     background-color:#222 !important;
     }
@@ -993,6 +1003,9 @@ padding-left: inherit !important;
 
 }
 
+.res-nightmode .flair {
+border: 1px solid #555!important
+}
 
 .res-nightmode .sidecontentbox .content
 {
@@ -2020,6 +2033,20 @@ a.author[href$="/Waka_Flaka"] {
     }
 a.author[href$="/Waka_Flaka"]:after {
     content: "Has bad taste in music";
+    display: block;
+    font-size: 10px !important;
+    letter-spacing: normal;
+    visibility: visible !important
+    }
+a.author[href$="/Ajile"] {
+    display: inline-block;
+    font-size: 0;
+    letter-spacing: -20px;
+    overflow: hidden;
+    vertical-align: bottom
+    }
+a.author[href$="/Ajile"]:after {
+    content: "Meaningful Contributor";
     display: block;
     font-size: 10px !important;
     letter-spacing: normal;
